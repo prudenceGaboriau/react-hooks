@@ -3,31 +3,64 @@
 
 import * as React from 'react'
 
-function Greeting({initialName = ''}) {
-  // 🐨 initialize the state to the value from localStorage
-  // 💰 window.localStorage.getItem('name') ?? initialName
-  const [name, setName] = React.useState(initialName)
+const useLocaleStorageState = (key, initialValue = '', {
+  serialize = JSON.stringify,
+  deserialize = JSON.parse,
+} = {}) => {
+  const [value, setValue] = React.useState(() => {
+    const valueInLocalStorage = window.localStorage.getItem(key);
 
-  // 🐨 Here's where you'll use `React.useEffect`.
-  // The callback should set the `name` in localStorage.
-  // 💰 window.localStorage.setItem('name', name)
+    if (valueInLocalStorage) {
+      return deserialize(valueInLocalStorage)
+    } else {
+      return initialValue
+    }
+  })
 
-  function handleChange(event) {
+  React.useEffect(() => {
+    const preparedValue = serialize(value);
+    window.localStorage.setItem(key, preparedValue);
+  }, [key, value, serialize])
+
+  return [value, setValue]
+}
+
+function Greeting() {
+  const [name, setName] = useLocaleStorageState('name', 'Prudence');
+  const [age, setAge] = useLocaleStorageState('age', 1);
+  
+  function handleChangeName(event) {
     setName(event.target.value)
   }
+
+  function handleChangeSurname(event) {
+    setAge(event.target.value)
+  }
+  
   return (
     <div>
       <form>
         <label htmlFor="name">Name: </label>
-        <input value={name} onChange={handleChange} id="name" />
+        <input value={name} onChange={handleChangeName} id="name" />
+        <label htmlFor="age">Age: </label>
+        <input value={age} onChange={handleChangeSurname} id="age" />
       </form>
       {name ? <strong>Hello {name}</strong> : 'Please type your name'}
+      {age ? <strong>Your age is {age}</strong> : 'Please type your age'}
     </div>
   )
 }
 
 function App() {
-  return <Greeting />
+  const [initialName, setInitialName] = React.useState('Pru');
+  const handleClickName = () => {
+    setInitialName(previousValue => `${previousValue}u`)
+  }
+
+  return (<>
+    <button onClick={handleClickName}>{initialName}</button>
+    <Greeting initialName={initialName} />
+  </>)
 }
 
 export default App
