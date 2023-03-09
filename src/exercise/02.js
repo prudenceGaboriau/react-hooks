@@ -13,13 +13,15 @@ const useLocaleStorageState = (key, initialValue = '', {
     if (valueInLocalStorage) {
       return deserialize(valueInLocalStorage)
     } else {
-      return initialValue
+      // if ma valeur initiale est une fonction je veux pouvoir l'exécuter au sein de la fonction anonyme sans quelle soit trigger à chaque rendu
+      return typeof initialValue === 'function' ? initialValue() : initialValue;
     }
   })
 
   React.useEffect(() => {
     const preparedValue = serialize(value);
     window.localStorage.setItem(key, preparedValue);
+    // on doit déclarer dans le tableau des dépendances toutes les variables dans le scope du useEffect qui peuvent changer
   }, [key, value, serialize])
 
   return [value, setValue]
